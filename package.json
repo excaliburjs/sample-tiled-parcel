@@ -16,12 +16,12 @@
   },
   "license": "BSD-2-Clause",
   "dependencies": {
-    "@excaliburjs/plugin-tiled": "0.29.0",
-    "excalibur": "0.29.0"
+    "@excaliburjs/plugin-tiled": "0.30.1",
+    "excalibur": "0.30.1"
   },
   "devDependencies": {
     "buffer": "^6.0.3",
-    "parcel": "2.10.2",
-    "typescript": "5.3.3"
+    "parcel": "2.13.3",
+    "typescript": "5.7.2"
   }
 }

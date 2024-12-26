@@ -104,27 +104,60 @@ export class Player extends ex.Actor {
         });
         this.graphics.add('down-walk', downWalk);
     }
+    private _currentAnim = 'down-idle';
 
     onPreUpdate(engine: ex.Engine, elapsedMs: number): void {
-        this.vel = ex.Vector.Zero;
+        let dir = ex.Vector.Zero;
+        this.graphics.use(this._currentAnim = 'down-idle');
+        if (engine.input.keyboard.isHeld(ex.Keys.ArrowUp)) {
+            dir.y = -1;
+            this.graphics.use(this._currentAnim = 'up-walk');
+        }
+        if (engine.input.keyboard.isHeld(ex.Keys.ArrowDown)) {
+            dir.y = 1;
+            this.graphics.use(this._currentAnim = 'down-walk');
+        }
+        if (engine.input.keyboard.isHeld(ex.Keys.ArrowRight)) {
+            dir.x = 1;
+            this.graphics.use(this._currentAnim = 'right-walk');
+        }
+        if (engine.input.keyboard.isHeld(ex.Keys.ArrowLeft)) {
+            dir.x = -1;
+            this.graphics.use(this._currentAnim = 'left-walk');
+        }
+        if (dir.x !== 0 && dir.y !== 0) {
+            dir = dir.normalize();
+        }
+        this.vel = dir.scale(Config.PlayerSpeed);
+    }
 
-        this.graphics.use('down-idle');
-        if (engine.input.keyboard.isHeld(ex.Input.Keys.ArrowRight)) {
-            this.vel = ex.vec(Config.PlayerSpeed, 0);
-            this.graphics.use('right-walk');
-        }
-        if (engine.input.keyboard.isHeld(ex.Input.Keys.ArrowLeft)) {
-            this.vel = ex.vec(-Config.PlayerSpeed, 0);
-            this.graphics.use('left-walk');
-        }
-        if (engine.input.keyboard.isHeld(ex.Input.Keys.ArrowUp)) {
-            this.vel = ex.vec(0, -Config.PlayerSpeed);
-            this.graphics.use('up-walk');
-        }
-        if (engine.input.keyboard.isHeld(ex.Input.Keys.ArrowDown)) {
-            this.vel = ex.vec(0, Config.PlayerSpeed);
-            this.graphics.use('down-walk');
-        }
+    onPreCollisionResolve(self: ex.Collider, other: ex.Collider, side: ex.Side, contact: ex.CollisionContact): void {
+        const otherOwner = other.owner;
+        if (otherOwner instanceof ex.TileMap) {
+            for (let contactPoint of contact.points) {
+                // Nudge into the tile zone by direction
+                const maybeTile = otherOwner.getTileByPoint(contactPoint.add(this.vel.normalize()));
+                if (maybeTile?.solid) {
+                    const targetMidW = maybeTile.pos.x + (maybeTile.width / 2);
+                    const targetMidH = maybeTile.pos.y + (maybeTile.height / 2);
 
+                    // This logic causes player to slide to nearest edge to go around objects.
+                    if (this._currentAnim === 'left-walk' || this._currentAnim === 'right-walk') {
+                        if (this.pos.y < targetMidH) { 
+                            this.pos.y -= 1;
+                        } else {
+                            this.pos.y += 1;
+                        }
+                    } else { // source.facing === 'up' || source.facing === 'down'
+                        if (this.pos.x < targetMidW) { 
+                            this.pos.x -= 1;
+                        } else {
+                            this.pos.x += 1;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
     }
 }

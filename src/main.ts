@@ -6,7 +6,8 @@ const game = new ex.Engine({
     height: 600,
     canvasElementId: 'game',
     pixelArt: true,
-    pixelRatio: 2
+    pixelRatio: 2,
+    displayMode: ex.DisplayMode.FitScreenAndFill
 });
 
 game.start(loader).then(() => {
